@@ -4,11 +4,27 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"math/big"
+	"mime"
 	"os"
 	"path/filepath"
 )
+
+type FileMetaInfo struct {
+	Name     string
+	Type     string
+	FileName string
+}
+
+func (f *FileMetaInfo) GetPadding() string {
+	return f.Name + "," + f.Type
+}
+
+func (f *FileMetaInfo) GetFileName() string {
+	return f.Name + "." + f.Type
+}
 
 func MenvExists() (bool, error) {
 	current_working_dir, _ := os.Getwd()
@@ -40,8 +56,12 @@ func FetchSecretKey() (string, error) {
 	return string(content), nil
 }
 
-func GetFileMetaData() {
-
+func GetFileMetaData(menvFilePath string) *FileMetaInfo {
+	mimeType := mime.TypeByExtension(menvFilePath)
+	return &FileMetaInfo{
+		Name: filepath.Base(menvFilePath),
+		Type: mimeType,
+	}
 }
 
 func GenerateRandomString(n int) (string, error) {
@@ -82,7 +102,7 @@ func Encrypt(plaintext string, secretKey string) string {
 	// is enough to separate it from the ciphertext.
 	ciphertext := gcm.Seal(nonce, nonce, []byte(plaintext), nil)
 
-	return string(ciphertext)
+	return hex.EncodeToString(ciphertext)
 }
 
 func Decrypt(ciphertext string, secretKey string) string {
@@ -106,5 +126,5 @@ func Decrypt(ciphertext string, secretKey string) string {
 		panic(err)
 	}
 
-	return string(plaintext)
+	return hex.EncodeToString(plaintext)
 }

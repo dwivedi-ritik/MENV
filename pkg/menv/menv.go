@@ -2,12 +2,12 @@ package menv
 
 import (
 	"errors"
+	"io"
 	"os"
 )
 
 // Create menv file for passed env file
-func GenerateMenv(envPath string) error {
-
+func CreateMenv(envPath string) error {
 	possibleEnv := []string{
 		".env", ".env.local",
 	}
@@ -32,6 +32,50 @@ func GenerateMenv(envPath string) error {
 		}
 	}
 
+	secretKey, err := FetchSecretKey()
+	if err != nil {
+		panic(err)
+	}
+	err = performMenvCreation(envPath, secretKey)
+	if err != nil {
+		return err
+	}
 	return nil
+
+}
+
+func performMenvCreation(envFilePath string, secretKey string) error {
+	fileInfo := GetFileMetaData(envFilePath)
+	content, err := os.ReadFile(envFilePath)
+	if err != nil {
+		panic(err)
+	}
+	paddedString := Encrypt(fileInfo.GetPadding(), secretKey)
+
+	mainContent := Encrypt(string(content), secretKey)
+
+	menvFile, err := os.Create("menv")
+	if err != nil {
+		return err
+	}
+	_, err = io.WriteString(menvFile, paddedString+"."+mainContent)
+	return err
+}
+
+func CreateEnv(menvPath string) error {
+	_, err := os.Stat(menvPath)
+	if errors.Is(err, os.ErrNotExist) {
+		return &FileNotExists{}
+	}
+
+	return nil
+}
+
+func performEnvCreation(menvFilePath string, secretKey string) {
+
+}
+
+// Takes encryption and return padded file information
+func ParseFileInfo(secretKey string) {
 
 }

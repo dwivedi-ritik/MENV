@@ -69,6 +69,16 @@ func perform_action[T any](actionArgument *ArgumentAction[T]) error {
 		conf_path := menv.FetchConfigPath()
 		_, err := os.Stat(conf_path)
 
+		err = menv.InitPathConfig()
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("New key generated")
+
+	} else if actionArgument.Action == "init" {
+		conf_path := menv.FetchConfigPath()
+		_, err := os.Stat(conf_path)
+
 		if errors.Is(err, os.ErrNotExist) {
 			fmt.Println("Couldn't find secret key, generating new key")
 			err = menv.InitPathConfig()
@@ -78,12 +88,11 @@ func perform_action[T any](actionArgument *ArgumentAction[T]) error {
 			fmt.Println("New key generated")
 		}
 
-		err = menv.GenerateMenv(actionArgument.Flag)
-
+		err = menv.CreateMenv(actionArgument.Flag)
 		if err != nil {
 			panic(err)
 		}
-
 	}
+
 	return nil
 }
