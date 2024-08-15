@@ -5,13 +5,11 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"errors"
+	"math/big"
 	"os"
 	"path/filepath"
 )
 
-const MENV_FILE_NAME string = "menv"
-
-// Checks if MENV file present in current directory
 func MenvExists() (bool, error) {
 	current_working_dir, _ := os.Getwd()
 	_, err := os.Stat(current_working_dir)
@@ -22,12 +20,42 @@ func MenvExists() (bool, error) {
 
 }
 
-// Returns the config path
+// Create parent dirs and returns the config path
 func FetchConfigPath() string {
-	config_path := ".config/menv"
-	home_path, _ := os.UserHomeDir()
-	path := filepath.Join(home_path, config_path)
-	return path
+	homePath, _ := os.UserHomeDir()
+	dirLocation := filepath.Join(homePath, ".config", "menv")
+	_, err := os.Stat(dirLocation)
+	if err != nil && errors.Is(err, os.ErrNotExist) {
+		os.MkdirAll(dirLocation, 0755) //Octal number for file permission
+	}
+	return filepath.Join(dirLocation, "secretKey")
+}
+
+func FetchSecretKey() (string, error) {
+	confPath := FetchConfigPath()
+	content, err := os.ReadFile(confPath)
+	if err != nil {
+		return "", err
+	}
+	return string(content), nil
+}
+
+func GetFileMetaData() {
+
+}
+
+func GenerateRandomString(n int) (string, error) {
+	const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-"
+	ret := make([]byte, n)
+	for i := 0; i < n; i++ {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters))))
+		if err != nil {
+			return "", err
+		}
+		ret[i] = letters[num.Int64()]
+	}
+
+	return string(ret), nil
 }
 
 func Encrypt(plaintext string, secretKey string) string {

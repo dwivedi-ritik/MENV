@@ -3,17 +3,35 @@ package menv
 import (
 	"errors"
 	"os"
-	"path/filepath"
 )
 
-const ENCRYPTION_FILE = "encryption.txt"
+// Create menv file for passed env file
+func GenerateMenv(envPath string) error {
 
-func GenerateMenv(env_path string) error {
-	config_path := FetchConfigPath()
-	encryption_file_path := filepath.Join(config_path, ENCRYPTION_FILE)
-	_, err := os.Stat(encryption_file_path)
-	if errors.Is(err, os.ErrNotExist) {
-		return os.ErrNotExist
+	possibleEnv := []string{
+		".env", ".env.local",
 	}
+	if len(envPath) == 0 {
+		for _, possibleEnv := range possibleEnv {
+			_, err := os.Stat(possibleEnv)
+			if err == nil {
+				envPath = possibleEnv
+				break
+			} else if err != nil && errors.Is(err, os.ErrNotExist) {
+				continue
+			} else {
+				panic(err)
+			}
+		}
+	} else if len(envPath) > 0 {
+		_, err := os.Stat(envPath)
+		if err != nil && errors.Is(err, os.ErrNotExist) {
+			return &FileNotExists{}
+		} else {
+			panic(err)
+		}
+	}
+
 	return nil
+
 }
