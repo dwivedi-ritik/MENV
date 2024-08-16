@@ -32,21 +32,21 @@ func main() {
 
 	switch os.Args[1] {
 	case "init":
-		init_arg := menv.InitArgument[string](os.Args[2:])
-		custom_init_action := &ArgumentAction[string]{
+		initArg := menv.InitArgument[string](os.Args[2:])
+		customInitAction := &ArgumentAction[string]{
 			Action: "init",
-			Flag:   init_arg.Flag,
-			Value:  init_arg.Value,
+			Flag:   initArg.Flag,
+			Value:  initArg.Value,
 		}
-		performAction[string](custom_init_action)
+		performAction[string](customInitAction)
 	case "update":
-		update_arg := menv.UpdateArgument[string](os.Args[2:])
-		custom_init_action := &ArgumentAction[string]{
+		updateArg := menv.UpdateArgument[string](os.Args[2:])
+		customInitAction := &ArgumentAction[string]{
 			Action: "update",
-			Flag:   update_arg.Flag,
-			Value:  update_arg.Value,
+			Flag:   updateArg.Flag,
+			Value:  updateArg.Value,
 		}
-		performAction[string](custom_init_action)
+		performAction[string](customInitAction)
 	default:
 		fmt.Println("nothing to perform")
 	}
@@ -68,7 +68,6 @@ func performAction[T any](actionArgument *ArgumentAction[T]) error {
 			}
 			fmt.Println("New key generated")
 		}
-
 		err = menv.CreateEnv(actionArgument.Flag)
 		if err != nil {
 			panic(err)
@@ -86,7 +85,6 @@ func performAction[T any](actionArgument *ArgumentAction[T]) error {
 			}
 			fmt.Println("New key generated")
 		}
-
 		err = menv.CreateMenv(actionArgument.Flag)
 		if err != nil {
 			panic(err)

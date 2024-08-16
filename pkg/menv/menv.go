@@ -19,7 +19,7 @@ func CreateMenv(envPath string) error {
 			if err == nil {
 				envPath = possibleEnv
 				break
-			} else if err != nil && errors.Is(err, os.ErrNotExist) {
+			} else if errors.Is(err, os.ErrNotExist) {
 				continue
 			} else {
 				panic(err)
@@ -27,10 +27,13 @@ func CreateMenv(envPath string) error {
 		}
 	} else if len(envPath) > 0 {
 		_, err := os.Stat(envPath)
-		if err != nil && errors.Is(err, os.ErrNotExist) {
-			return &FileNotExists{}
-		} else {
-			panic(err)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				return &FileNotExists{}
+			} else {
+				panic(err)
+			}
+
 		}
 	}
 
