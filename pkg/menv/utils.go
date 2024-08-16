@@ -10,6 +10,7 @@ import (
 	"mime"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type FileMetaInfo struct {
@@ -23,7 +24,27 @@ func (f *FileMetaInfo) GetPadding() string {
 }
 
 func (f *FileMetaInfo) GetFileName() string {
-	return f.Name + "." + f.Type
+	if len(f.Name) > 0 && len(f.Type) > 0 {
+
+		return f.Name + "." + f.Type
+	}
+	return f.Name
+}
+
+// Takes encryption and return padded file information
+func ParseFileInfo(secretKey string, paddedString []byte) *FileMetaInfo {
+	decryptedPadding := Decrypt(paddedString, secretKey)
+	infoArr := strings.Split(decryptedPadding, ",")
+
+	if len(infoArr) == 1 { //If env file doesn't have any extension
+		return &FileMetaInfo{
+			Name: infoArr[0],
+		}
+	}
+	return &FileMetaInfo{
+		Name: infoArr[0],
+		Type: infoArr[1],
+	}
 }
 
 func MenvExists() (bool, error) {
@@ -105,7 +126,8 @@ func Encrypt(plaintext string, secretKey string) string {
 	return hex.EncodeToString(ciphertext)
 }
 
-func Decrypt(ciphertext string, secretKey string) string {
+func Decrypt(ciphertext []byte, secretKey string) string {
+
 	aes, err := aes.NewCipher([]byte(secretKey))
 	if err != nil {
 		panic(err)
@@ -121,10 +143,10 @@ func Decrypt(ciphertext string, secretKey string) string {
 	nonceSize := gcm.NonceSize()
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 
-	plaintext, err := gcm.Open(nil, []byte(nonce), []byte(ciphertext), nil)
+	plaintext, err := gcm.Open(nil, []byte(nonce), ciphertext, nil)
 	if err != nil {
 		panic(err)
 	}
 
-	return hex.EncodeToString(plaintext)
+	return string(plaintext)
 }

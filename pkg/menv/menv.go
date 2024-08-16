@@ -1,9 +1,11 @@
 package menv
 
 import (
+	"encoding/hex"
 	"errors"
 	"io"
 	"os"
+	"strings"
 )
 
 // Create menv file for passed env file
@@ -55,6 +57,7 @@ func performMenvCreation(envFilePath string, secretKey string) error {
 	mainContent := Encrypt(string(content), secretKey)
 
 	menvFile, err := os.Create("menv")
+	defer menvFile.Close()
 	if err != nil {
 		return err
 	}
@@ -63,19 +66,50 @@ func performMenvCreation(envFilePath string, secretKey string) error {
 }
 
 func CreateEnv(menvPath string) error {
+	if len(menvPath) == 0 {
+		menvPath = "menv"
+	}
 	_, err := os.Stat(menvPath)
+	if err != nil {
+		panic(err)
+	}
 	if errors.Is(err, os.ErrNotExist) {
 		return &FileNotExists{}
 	}
 
-	return nil
+	secretKey, err := FetchSecretKey()
+
+	err = performEnvCreation(menvPath, secretKey)
+
+	return err
 }
 
-func performEnvCreation(menvFilePath string, secretKey string) {
+func performEnvCreation(menvFilePath string, secretKey string) error {
+	content, err := os.ReadFile(menvFilePath)
 
-}
+	if err != nil {
+		return err
+	}
+	stringContent := string(content)
 
-// Takes encryption and return padded file information
-func ParseFileInfo(secretKey string) {
+	encryptedString := strings.Split(stringContent, ".")
+	paddedString := encryptedString[0]
+	originalEncryptedString := encryptedString[1]
 
+	byteDecodedEncryption, err := hex.DecodeString(originalEncryptedString)
+	if err != nil {
+		panic(err)
+	}
+	byteDecodedPaddedString, err := hex.DecodeString(paddedString)
+	if err != nil {
+		panic(err)
+
+	}
+	fileMetaInfo := ParseFileInfo(secretKey, byteDecodedPaddedString)
+	decryptedOriginalString := Decrypt(byteDecodedEncryption, secretKey)
+
+	menvFile, err := os.Create(fileMetaInfo.GetFileName())
+	defer menvFile.Close()
+	io.WriteString(menvFile, decryptedOriginalString)
+	return err
 }
