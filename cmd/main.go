@@ -14,6 +14,24 @@ type ArgumentAction[T any] struct {
 	Value  T
 }
 
+const helpText = `
+Usage: menv COMMAND [options]
+
+A tool to manage your enviroment files
+
+Commands:
+  init     Initialize the menv file
+  update   Update your environment file
+
+Options:
+	-f		Name of enironment file
+
+Examples:
+  menv init
+  menv init -f config.json
+  menv update
+`
+
 func (argAction *ArgumentAction[T]) validateAction() bool {
 	validCommands := map[string]bool{
 		"init":     true,
@@ -48,7 +66,7 @@ func main() {
 		}
 		performAction[string](customInitAction)
 	default:
-		fmt.Println("nothing to perform")
+		fmt.Printf("%v", helpText)
 	}
 }
 
