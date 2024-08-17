@@ -7,11 +7,26 @@ You can retrive you file using `menv update`.
 
 #### Uses
 
-- menv init -f environment-file
-- menv update
+```
+A tool to manage your enviroment files
 
-if no option passed, its picks .env or .env.local file.
+Commands:
+  init     Initialize the menv file
+  update   Update your Menvfile with environment file changes
+  generate Generate your environment file from Menvfile
 
+
+Options:
+        init     -f      Name of environment file
+        generate -y      Yes for overridden message
+
+Examples:
+  menv init
+  menv init -f config.json
+  menv update
+  menv generate
+
+```
 
 #### Installation
 
