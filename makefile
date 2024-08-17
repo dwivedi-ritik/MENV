@@ -1,7 +1,7 @@
 
 run: build
-	./.bin/menv
+	./bin/menv
 build: clear
-	@go build -o ./.bin/menv ./cmd/main.go
+	@go build -o ./bin/menv ./cmd/main.go
 clear:
 	@rm -rf ./bin/*

@@ -22,7 +22,7 @@ func (arg *ArgumentType[T]) isValid() bool {
 
 func InitArgument[T string | int](args []string) *ArgumentType[T] {
 	init_arg := flag.NewFlagSet("init", flag.ExitOnError)
-	init_arg_file := init_arg.String("f", "", "Pass file name to be processed")
+	init_arg_file := init_arg.String("f", "", "Pass file name to be process")
 	init_arg.Parse(args)
 	new_argument_type := ArgumentType[T]{
 		Argument: "init",
@@ -42,6 +42,7 @@ func UpdateArgument[T string | int](args []string) *ArgumentType[T] {
 	return &new_argument_type
 }
 
+// deprecated
 func GenerateArgument[T string | int](args []string) *ArgumentType[T] {
 	init_arg := flag.NewFlagSet("generate", flag.ExitOnError)
 	var init_arg_file string

@@ -9,7 +9,7 @@ import (
 func InitConfig() error {
 	fmt.Println("Couldn't find secret key, generating new key")
 	confPath := FetchConfigPath()
-	new_key, err := GenerateRandomString(32) //32 byte secreat key size
+	new_key, err := GenerateRandomString(32) //32 byte secret key size
 	file, err := os.Create(confPath)
 	defer file.Close()
 	_, err = file.WriteString(new_key)

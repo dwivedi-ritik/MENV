@@ -11,3 +11,8 @@ You can retrive you file using `menv update`.
 - menv update
 
 if no option passed, its picks .env or .env.local file.
+
+
+#### Installation
+
+- Run `make` to build binary, move this binary to your env path
