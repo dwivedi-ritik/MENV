@@ -5,6 +5,13 @@
 Tool to manage environment file. It encrypt your environment file and create MenvFile which you can push to your remote repository.
 You can retrive you file using `menv update`.
 
+#### Why and what problem its solves ?
+
+The sole purpose of this tool to creates an encrypted Menvfile containing your environment configuration and metadata.
+It allows you to securely store and retrieve your environment settings even if you delete your local project.
+This ensures easy restoration of critical configurations without relying on local project files.
+
+
 #### Uses
 
 ```
