@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"os"
 
@@ -23,8 +22,8 @@ Commands:
   init     Initialize the menv file
   update   Update your environment file
 
-Options:
-	-f		Name of enironment file
+update Options:
+	-f		Name of environment file
 
 Examples:
   menv init
@@ -57,6 +56,7 @@ func main() {
 			Value:  initArg.Value,
 		}
 		performAction[string](customInitAction)
+		break
 	case "update":
 		updateArg := menv.UpdateArgument[string](os.Args[2:])
 		customInitAction := &ArgumentAction[string]{
@@ -65,8 +65,10 @@ func main() {
 			Value:  updateArg.Value,
 		}
 		performAction[string](customInitAction)
+		break
 	default:
 		fmt.Printf("%v", helpText)
+		break
 	}
 }
 
@@ -74,40 +76,33 @@ func performAction[T any](actionArgument *ArgumentAction[T]) error {
 	if !actionArgument.validateAction() {
 		return &menv.InvalidAction{}
 	}
-	if actionArgument.Action == "update" {
-		conf_path := menv.FetchConfigPath()
-		_, err := os.Stat(conf_path)
 
-		if errors.Is(err, os.ErrNotExist) {
-			fmt.Println("Couldn't find secret key, generating new key")
-			err = menv.InitPathConfig()
-			if err != nil {
-				panic(err)
-			}
-			fmt.Println("New key generated")
-		}
-		err = menv.CreateEnv(actionArgument.Flag)
-		if err != nil {
-			panic(err)
-		}
-
-	} else if actionArgument.Action == "init" {
-		conf_path := menv.FetchConfigPath()
-		_, err := os.Stat(conf_path)
-
-		if errors.Is(err, os.ErrNotExist) {
-			fmt.Println("Couldn't find secret key, generating new key")
-			err = menv.InitPathConfig()
-			if err != nil {
-				panic(err)
-			}
-			fmt.Println("New key generated")
-		}
-		err = menv.CreateMenv(actionArgument.Flag)
+	isConfExist, err := menv.IsConfigExists()
+	if err != nil {
+		panic(err)
+	}
+	if !isConfExist {
+		err = menv.InitConfig()
 		if err != nil {
 			panic(err)
 		}
 	}
 
+	switch actionArgument.Action {
+	case "update":
+		err = menv.CreateEnv(actionArgument.Flag)
+		if err != nil {
+			panic(err)
+		}
+		break
+	case "init":
+		err = menv.CreateMenv(actionArgument.Flag)
+		if err != nil {
+			panic(err)
+		}
+		break
+	default:
+		break
+	}
 	return nil
 }

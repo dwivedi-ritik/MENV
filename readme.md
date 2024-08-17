@@ -2,10 +2,12 @@
 
 ## MENV
 
-Tool to manage environment of deleted project. It saves your env variables in encrypted files and push menv file to your remote repository.
-Which can be used to retrive all your env variables, you can set them as system env or you can generate .env file
+Tool to manage environment file. It encrypt your environment file and create MenvFile which you can push to your remote repository.
+You can retrive you file using `menv update`.
 
 #### Uses
 
-- menv init
+- menv init -f environment-file
 - menv update
+
+if no option passed, its picks .env or .env.local file.

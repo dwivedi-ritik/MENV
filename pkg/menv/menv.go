@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+const menvFile = "MenvFile"
+
 // Create menv file for passed env file
 func CreateMenv(envPath string) error {
 	possibleEnv := []string{
@@ -59,7 +61,7 @@ func performMenvCreation(envFilePath string, secretKey string) error {
 
 	mainContent := Encrypt(string(content), secretKey)
 
-	menvFile, err := os.Create("menv")
+	menvFile, err := os.Create(menvFile)
 	defer menvFile.Close()
 	if err != nil {
 		return err
@@ -70,7 +72,7 @@ func performMenvCreation(envFilePath string, secretKey string) error {
 
 func CreateEnv(menvPath string) error {
 	if len(menvPath) == 0 {
-		menvPath = "menv"
+		menvPath = menvFile
 	}
 	_, err := os.Stat(menvPath)
 	if err != nil {
