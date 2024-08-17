@@ -8,8 +8,8 @@ You can retrive you file using `menv update`.
 #### Why and what problem its solves ?
 
 The sole purpose of this tool to creates an encrypted Menvfile containing your environment configuration and metadata.
-It allows you to securely store and retrieve your environment settings even if you delete your local project.
-This ensures easy restoration of critical configurations without relying on local project files.
+It allows you to securely store and retrieve your environment file even if you delete your local project.
+This ensures easy restoration of environment files and configurations without relying on local project files.
 
 
 #### Uses
