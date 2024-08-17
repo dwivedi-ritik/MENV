@@ -47,17 +47,28 @@ func ParseFileInfo(secretKey string, paddedString []byte) *FileMetaInfo {
 	}
 }
 
-func IsConfigExists() (bool, error) {
+func IsConfigExists() bool {
 	confPath := FetchConfigPath()
 	_, err := os.Stat(confPath)
 
 	if errors.Is(err, os.ErrNotExist) {
-		return false, nil
+		return false
 	} else if err != nil {
-		return false, err
+		panic(err)
 	}
 
-	return true, nil
+	return true
+}
+
+func IsMenvFileExists() bool {
+	_, err := os.Stat(menvFile)
+	if errors.Is(err, os.ErrNotExist) {
+		return false
+	} else if err != nil {
+		panic(err)
+	}
+
+	return true
 }
 
 func FetchConfigPath() string {

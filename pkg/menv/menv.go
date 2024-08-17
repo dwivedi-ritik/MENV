@@ -3,14 +3,44 @@ package menv
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
 )
 
-const menvFile = "MenvFile"
+const menvFile = "Menvfile"
 
-// Create menv file for passed env file
+type MenvFile struct {
+	PaddingString   []byte
+	EncryptedString []byte
+}
+
+func GetMenvFileInfo(menvFilePath string) *MenvFile {
+	content, err := os.ReadFile(menvFilePath)
+	if err != nil {
+		panic(err)
+	}
+	stringContent := string(content)
+	encryptedString := strings.Split(stringContent, ".")
+
+	byteDecodedPaddedString, err := hex.DecodeString(encryptedString[0])
+	if err != nil {
+		panic(err)
+	}
+
+	byteDecodedEncryption, err := hex.DecodeString(encryptedString[1])
+	if err != nil {
+		panic(err)
+
+	}
+	return &MenvFile{
+		PaddingString:   byteDecodedPaddedString,
+		EncryptedString: byteDecodedEncryption,
+	}
+
+}
+
 func CreateMenv(envPath string) error {
 	possibleEnv := []string{
 		".env", ".env.local",
@@ -70,51 +100,93 @@ func performMenvCreation(envFilePath string, secretKey string) error {
 	return err
 }
 
-func CreateEnv(menvPath string) error {
-	if len(menvPath) == 0 {
-		menvPath = menvFile
-	}
-	_, err := os.Stat(menvPath)
-	if err != nil {
-		panic(err)
-	}
+func CreateEnv(overrideFlag bool) error {
+	_, err := os.Stat(menvFile)
+
 	if errors.Is(err, os.ErrNotExist) {
-		return &FileNotExists{}
+		return &MenvFileNotExists{}
 	}
 
 	secretKey, err := FetchSecretKey()
+	menvFileInfo := GetMenvFileInfo(menvFile)
 
-	err = performEnvCreation(menvPath, secretKey)
+	if overrideFlag {
+		err = performEnvCreation(secretKey, menvFileInfo)
+		if err != nil {
+			panic(err)
+		}
+		return nil
+	}
 
-	return err
+	fileMetaInfo := ParseFileInfo(secretKey, menvFileInfo.PaddingString)
+
+	_, err = os.Stat(fileMetaInfo.GetFileName())
+
+	if errors.Is(err, os.ErrNotExist) {
+		err = performEnvCreation(secretKey, menvFileInfo)
+		if err != nil {
+			panic(err)
+		}
+		return nil
+
+	}
+	var overrideCommand string
+	fmt.Printf("Your %v file content, will be overridden? Y/N: ", fileMetaInfo.GetFileName())
+	fmt.Scanln(&overrideCommand)
+
+	if len(overrideCommand) == 0 || strings.ToLower(overrideCommand)[0] == 'n' {
+		return nil
+	}
+
+	err = performEnvCreation(secretKey, menvFileInfo)
+	if err != nil {
+		panic(err)
+	}
+	return nil
 }
 
-func performEnvCreation(menvFilePath string, secretKey string) error {
-	content, err := os.ReadFile(menvFilePath)
-
-	if err != nil {
-		return err
-	}
-	stringContent := string(content)
-
-	encryptedString := strings.Split(stringContent, ".")
-	paddedString := encryptedString[0]
-	originalEncryptedString := encryptedString[1]
-
-	byteDecodedEncryption, err := hex.DecodeString(originalEncryptedString)
-	if err != nil {
-		panic(err)
-	}
-	byteDecodedPaddedString, err := hex.DecodeString(paddedString)
-	if err != nil {
-		panic(err)
-
-	}
-	fileMetaInfo := ParseFileInfo(secretKey, byteDecodedPaddedString)
-	decryptedOriginalString := Decrypt(byteDecodedEncryption, secretKey)
+func performEnvCreation(secretKey string, menvFileInfo *MenvFile) error {
+	fileMetaInfo := ParseFileInfo(secretKey, menvFileInfo.PaddingString)
+	decryptedOriginalString := Decrypt(menvFileInfo.EncryptedString, secretKey)
 
 	menvFile, err := os.Create(fileMetaInfo.GetFileName())
 	defer menvFile.Close()
 	io.WriteString(menvFile, decryptedOriginalString)
 	return err
+}
+
+func UpdateMenvFile() error {
+	isFileExists := IsMenvFileExists() //Not generic method, This will be checking the current executable path for Menvfile
+	if !isFileExists {
+		return &MenvFileNotExists{}
+	}
+
+	menvFileInfo := GetMenvFileInfo(menvFile)
+	secretKey, err := FetchSecretKey()
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return &ConfigNotExists{}
+		}
+	}
+
+	envFileInfo := ParseFileInfo(secretKey, menvFileInfo.PaddingString)
+	envFileName := envFileInfo.GetFileName()
+	_, err = os.Stat(envFileName)
+
+	if errors.Is(err, os.ErrNotExist) {
+		err = performMenvCreation(envFileName, secretKey)
+		if err != nil {
+			panic(err)
+		}
+
+	} else if err != nil {
+		panic(err)
+	}
+
+	err = performMenvCreation(envFileName, secretKey)
+	if err != nil {
+		panic(err)
+	}
+
+	return nil
 }

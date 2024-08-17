@@ -20,15 +20,19 @@ A tool to manage your enviroment files
 
 Commands:
   init     Initialize the menv file
-  update   Update your environment file
+  update   Update your Menvfile with environment file changes
+  generate Generate your environment file from Menvfile
 
-update Options:
-	-f		Name of environment file
+
+Options:
+	init 	 -f	 Name of environment file
+	generate -y  Yes for overridden message
 
 Examples:
   menv init
   menv init -f config.json
   menv update
+  menv generate
 `
 
 func (argAction *ArgumentAction[T]) validateAction() bool {
@@ -66,6 +70,15 @@ func main() {
 		}
 		performAction[string](customInitAction)
 		break
+	case "generate":
+		updateArg := menv.GenerateArgument[bool](os.Args[2:])
+		customInitAction := &ArgumentAction[bool]{
+			Action: "generate",
+			Flag:   updateArg.Flag,
+			Value:  updateArg.Value,
+		}
+		performAction[bool](customInitAction)
+		break
 	default:
 		fmt.Printf("%v", helpText)
 		break
@@ -77,28 +90,31 @@ func performAction[T any](actionArgument *ArgumentAction[T]) error {
 		return &menv.InvalidAction{}
 	}
 
-	isConfExist, err := menv.IsConfigExists()
-	if err != nil {
-		panic(err)
-	}
+	isConfExist := menv.IsConfigExists()
 	if !isConfExist {
-		err = menv.InitConfig()
+		err := menv.InitConfig()
 		if err != nil {
-			panic(err)
+			fmt.Printf(err.Error())
 		}
 	}
 
 	switch actionArgument.Action {
-	case "update":
-		err = menv.CreateEnv(actionArgument.Flag)
+	case "init":
+		err := menv.CreateMenv(any(actionArgument.Value).(string))
 		if err != nil {
-			panic(err)
+			fmt.Printf(err.Error())
 		}
 		break
-	case "init":
-		err = menv.CreateMenv(actionArgument.Flag)
+	case "update":
+		err := menv.UpdateMenvFile()
 		if err != nil {
-			panic(err)
+			fmt.Printf(err.Error())
+		}
+		break
+	case "generate":
+		err := menv.CreateEnv(any(actionArgument.Value).(bool))
+		if err != nil {
+			fmt.Printf(err.Error())
 		}
 		break
 	default:
